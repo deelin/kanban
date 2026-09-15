@@ -13,6 +13,7 @@ import type {
 	RuntimeTerminalWsServerMessage,
 } from "@/runtime/types";
 import { clearTerminalGeometry, reportTerminalGeometry } from "@/terminal/terminal-geometry-registry";
+import { installTerminalImageInput } from "@/terminal/terminal-image-input";
 import { createKanbanTerminalOptions } from "@/terminal/terminal-options";
 import {
 	appendTerminalHeuristicText,
@@ -162,6 +163,7 @@ class PersistentTerminal {
 	private outputTextDecoder = new TextDecoder();
 	private terminalWriteQueue: Promise<void> = Promise.resolve();
 	private disposed = false;
+	private readonly disposeImageInput: () => void;
 
 	constructor(
 		private readonly taskId: string,
@@ -194,6 +196,24 @@ class PersistentTerminal {
 		this.terminal.loadAddon(this.unicode11Addon);
 		this.terminal.unicode.activeVersion = "11";
 		this.terminal.open(this.hostElement);
+		this.disposeImageInput = installTerminalImageInput({
+			host: this.hostElement,
+			captureSession: () => {
+				if (!this.connectionReady || this.disposed) return null;
+				const socket = this.ioSocket;
+				const startedAt = this.latestSummary?.startedAt;
+				return () =>
+					!this.disposed &&
+					this.connectionReady &&
+					this.ioSocket === socket &&
+					this.latestSummary?.startedAt === startedAt;
+			},
+			runCommand: (input) => getRuntimeTrpcClient(this.workspaceId).runtime.runCommand.mutate(input),
+			paste: (path) => this.paste(path),
+			focus: () => {
+				if (this.visibleContainer) this.focus();
+			},
+		});
 		this.terminal.onData((data) => {
 			this.sendIoData(data);
 		});
@@ -685,6 +705,7 @@ class PersistentTerminal {
 			return;
 		}
 		this.disposed = true;
+		this.disposeImageInput();
 		this.unmount(this.visibleContainer);
 		this.ioSocket?.close();
 		this.controlSocket?.close();

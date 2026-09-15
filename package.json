@@ -1,6 +1,6 @@
 {
   "name": "kanban",
-  "version": "0.1.70",
+  "version": "0.1.70-deelin.1",
   "description": "A kanban foundation for coding agents",
   "publishConfig": {
     "access": "public",
@@ -13,14 +13,14 @@
     "task-management",
     "typescript"
   ],
-  "homepage": "https://github.com/cline/kanban",
+  "homepage": "https://github.com/deelin/kanban",
   "bugs": {
-    "url": "https://github.com/cline/kanban/issues"
+    "url": "https://github.com/deelin/kanban/issues"
   },
   "author": "Cline",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cline/kanban"
+    "url": "https://github.com/deelin/kanban"
   },
   "type": "module",
   "bin": {
@@ -39,7 +39,9 @@
     "dist",
     "man",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "FORK.md",
+    "examples/codex-statusline.toml"
   ],
   "engines": {
     "node": ">=22"
@@ -47,7 +49,7 @@
   "scripts": {
     "clean": "shx rm -rf dist coverage",
     "install:all": "npm install && npm --prefix web-ui install && npm --prefix packages/desktop install",
-    "build": "npm run clean && npm run web:build && node scripts/build.mjs && shx mkdir -p dist/web-ui && shx cp -r web-ui/dist/* dist/web-ui && node scripts/upload-sentry-sourcemaps.mjs && shx chmod +x dist/cli.js",
+    "build": "npm run clean && npm run web:build && node scripts/build.mjs && shx mkdir -p dist/web-ui && shx cp -r web-ui/dist/* dist/web-ui && shx chmod +x dist/cli.js",
     "dogfood": "node scripts/dogfood.mjs",
     "link": "npm run build && npm link",
     "unlink": "npm unlink -g kanban",
@@ -120,5 +122,6 @@
     "esbuild": "$esbuild",
     "js-yaml": ">=4.3.1 <5",
     "postcss": ">=8.5.23 <9"
-  }
+  },
+  "private": true
 }

@@ -1,3 +1,5 @@
+> **Personal fork:** [deelin/kanban](https://github.com/deelin/kanban) adds screenshot drag-and-drop and image paste to agent terminals. See [FORK.md](FORK.md) for installation, changes, and update instructions.
+
 ## npx kanban (Research Preview)
 
 <p align="center">

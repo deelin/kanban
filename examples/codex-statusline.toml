@@ -1,0 +1,6 @@
+# Merge these keys into the existing [tui] section of your Codex config.
+# Tested with Codex CLI 0.153.4. Missing account metrics are hidden by Codex.
+[tui]
+status_line = ["current-dir", "git-branch", "pull-request-number", "model-with-reasoning", "used-tokens", "context-used", "five-hour-limit", "weekly-limit", "permissions", "approval-mode", "estimated-thread-cost"]
+status_line_use_colors = true
+theme = "catppuccin-mocha"

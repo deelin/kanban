@@ -594,6 +594,16 @@ export function runPendingAutoUpdateOnShutdown(options?: {
 }
 
 export async function runOnDemandUpdate(options: OnDemandUpdateOptions): Promise<OnDemandUpdateResult> {
+	if (options.currentVersion.includes("-deelin.")) {
+		return {
+			status: "unsupported_installation",
+			currentVersion: options.currentVersion,
+			latestVersion: null,
+			packageManager: UpdatePackageManager.LOCAL,
+			message:
+				"This is the deelin/kanban fork. Update from https://github.com/deelin/kanban/releases instead of npm.",
+		};
+	}
 	const entrypointArg = options.argv?.[1] ?? process.argv[1];
 	if (!entrypointArg) {
 		return {
@@ -707,6 +717,8 @@ export async function runOnDemandUpdate(options: OnDemandUpdateOptions): Promise
 }
 
 export async function runAutoUpdateCheck(options: UpdateStartupOptions): Promise<void> {
+	// Personal releases must never be replaced by the upstream npm package.
+	if (options.currentVersion.includes("-deelin.")) return;
 	const env = options.env ?? process.env;
 	if (isAutoUpdateDisabled(env)) {
 		return;
