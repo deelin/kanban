@@ -45,6 +45,14 @@ npm install --global ./kanban-0.1.70-deelin.1.tgz
 For development, `npm run dev:full` runs the local source. Keep `origin` pointed
 to `deelin/kanban` and `upstream` pointed to `cline/kanban`.
 
+## Source changes after the first release
+
+The source branch now also includes a collapsible right-hand changes pane. It
+starts closed when task detail loads, leaving a narrow **Show changes panel**
+button on the right. Opening it restores the saved divider sizes; the toolbar
+can collapse it again. Mobile continues to use its Chat/Diff/Files tabs.
+This addition is not included in the original `v0.1.70-deelin.1` release archive.
+
 ## What's changed
 
 - Screenshot drag-and-drop and image paste work in existing terminal sessions.

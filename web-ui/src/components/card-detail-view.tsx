@@ -1,5 +1,14 @@
 import type { DropResult } from "@hello-pangea/dnd";
-import { Files, GitCompareArrows, Maximize2, MessageSquare, Minimize2, X } from "lucide-react";
+import {
+	Files,
+	GitCompareArrows,
+	Maximize2,
+	MessageSquare,
+	Minimize2,
+	PanelRightClose,
+	PanelRightOpen,
+	X,
+} from "lucide-react";
 import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -267,12 +276,14 @@ function DiffToolbar({
 	isExpanded,
 	onToggleExpand,
 	hideExpand,
+	onCollapsePanel,
 }: {
 	mode: RuntimeWorkspaceChangesMode;
 	onModeChange: (mode: RuntimeWorkspaceChangesMode) => void;
 	isExpanded: boolean;
 	onToggleExpand: () => void;
 	hideExpand?: boolean;
+	onCollapsePanel?: () => void;
 }): React.ReactElement {
 	return (
 		<div className="flex items-center gap-1 border-b border-divider px-2 py-1">
@@ -294,13 +305,24 @@ function DiffToolbar({
 					Last Turn
 				</DiffModeButton>
 			</div>
+			{onCollapsePanel ? (
+				<Button
+					variant="ghost"
+					size="sm"
+					icon={<PanelRightClose size={14} />}
+					onClick={onCollapsePanel}
+					className="ml-auto h-5"
+					title="Collapse changes panel"
+					aria-label="Collapse changes panel"
+				/>
+			) : null}
 			{!hideExpand ? (
 				<Button
 					variant="ghost"
 					size="sm"
 					icon={isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
 					onClick={onToggleExpand}
-					className="ml-auto h-5"
+					className={cn("h-5", !onCollapsePanel && "ml-auto")}
 					aria-label={isExpanded ? "Collapse split diff view" : "Expand split diff view"}
 				/>
 			) : null}
@@ -440,6 +462,7 @@ export function CardDetailView({
 	const [diffComments, setDiffComments] = useState<Map<string, DiffLineComment>>(new Map());
 	const [diffMode, setDiffMode] = useState<RuntimeWorkspaceChangesMode>("working_copy");
 	const [isDiffExpanded, setIsDiffExpanded] = useState(false);
+	const [isChangesPanelCollapsed, setIsChangesPanelCollapsed] = useState(true);
 	const {
 		taskCardsPanelRatio,
 		setTaskCardsPanelRatio,
@@ -843,11 +866,14 @@ export function CardDetailView({
 						<div ref={mainRowRef} className="flex min-h-0 flex-1 overflow-hidden">
 							<div
 								className="min-h-0 min-w-0"
-								style={{ display: isDiffExpanded ? "none" : "flex", width: agentPanelPercent }}
+								style={{
+									display: isDiffExpanded ? "none" : "flex",
+									width: isChangesPanelCollapsed ? "calc(100% - 36px)" : agentPanelPercent,
+								}}
 							>
 								{agentChatPanel}
 							</div>
-							{!isDiffExpanded ? (
+							{!isDiffExpanded && !isChangesPanelCollapsed ? (
 								<ResizeHandle
 									orientation="vertical"
 									ariaLabel="Resize agent and diff panels"
@@ -855,69 +881,84 @@ export function CardDetailView({
 									className="z-10"
 								/>
 							) : null}
-							<div
-								className="flex min-h-0 min-w-0 flex-col"
-								style={{ width: isDiffExpanded ? "100%" : diffPanelPercent }}
-							>
-								{isRuntimeAvailable ? (
-									<DiffToolbar
-										mode={diffMode}
-										onModeChange={setDiffMode}
-										isExpanded={isDiffExpanded}
-										onToggleExpand={handleToggleDiffExpand}
+							{isChangesPanelCollapsed ? (
+								<div className="flex w-9 shrink-0 items-start justify-center border-l border-divider bg-surface-1 px-1 py-2">
+									<Button
+										variant="ghost"
+										size="sm"
+										icon={<PanelRightOpen size={14} />}
+										onClick={() => setIsChangesPanelCollapsed(false)}
+										className="h-7 w-7"
+										title="Show changes panel"
+										aria-label="Show changes panel"
 									/>
-								) : null}
-								<div className="flex min-h-0 flex-1">
-									{isWorkspaceChangesPending ? (
-										<WorkspaceChangesLoadingPanel panelFlex={detailDiffFileTreePanelFlex} />
-									) : hasNoWorkspaceFileChanges ? (
-										<WorkspaceChangesEmptyPanel title={emptyDiffTitle} />
-									) : (
-										<div ref={detailDiffRowRef} className="flex min-w-0 flex-1">
-											<div
-												className="flex min-h-0 min-w-0"
-												style={{ flex: `0 0 ${detailDiffContentPanelPercent}` }}
-											>
-												<DiffViewerPanel
-													workspaceFiles={isRuntimeAvailable ? runtimeFiles : null}
-													selectedPath={selectedPath}
-													onSelectedPathChange={setSelectedPath}
-													viewMode={isDiffExpanded ? "split" : "unified"}
-													onAddToTerminal={
-														onAddReviewComments || showClineAgentChatPanel
-															? handleAddDiffComments
-															: undefined
-													}
-													onSendToTerminal={
-														onSendReviewComments || showClineAgentChatPanel
-															? handleSendDiffComments
-															: undefined
-													}
-													comments={diffComments}
-													onCommentsChange={setDiffComments}
-												/>
-											</div>
-											<ResizeHandle
-												orientation="vertical"
-												ariaLabel="Resize detail diff panels"
-												onMouseDown={handleDetailDiffSeparatorMouseDown}
-												className="z-10"
-											/>
-											<div
-												className="flex min-h-0 min-w-0"
-												style={{ flex: `0 0 ${detailDiffFileTreePanelPercent}` }}
-											>
-												<FileTreePanel
-													workspaceFiles={isRuntimeAvailable ? runtimeFiles : null}
-													selectedPath={selectedPath}
-													onSelectPath={setSelectedPath}
-													panelFlex="1 1 0"
-												/>
-											</div>
-										</div>
-									)}
 								</div>
-							</div>
+							) : (
+								<div
+									className="flex min-h-0 min-w-0 flex-col"
+									style={{ width: isDiffExpanded ? "100%" : diffPanelPercent }}
+								>
+									{isRuntimeAvailable ? (
+										<DiffToolbar
+											mode={diffMode}
+											onModeChange={setDiffMode}
+											isExpanded={isDiffExpanded}
+											onToggleExpand={handleToggleDiffExpand}
+											onCollapsePanel={isDiffExpanded ? undefined : () => setIsChangesPanelCollapsed(true)}
+										/>
+									) : null}
+									<div className="flex min-h-0 flex-1">
+										{isWorkspaceChangesPending ? (
+											<WorkspaceChangesLoadingPanel panelFlex={detailDiffFileTreePanelFlex} />
+										) : hasNoWorkspaceFileChanges ? (
+											<WorkspaceChangesEmptyPanel title={emptyDiffTitle} />
+										) : (
+											<div ref={detailDiffRowRef} className="flex min-w-0 flex-1">
+												<div
+													className="flex min-h-0 min-w-0"
+													style={{ flex: `0 0 ${detailDiffContentPanelPercent}` }}
+												>
+													<DiffViewerPanel
+														workspaceFiles={isRuntimeAvailable ? runtimeFiles : null}
+														selectedPath={selectedPath}
+														onSelectedPathChange={setSelectedPath}
+														viewMode={isDiffExpanded ? "split" : "unified"}
+														onAddToTerminal={
+															onAddReviewComments || showClineAgentChatPanel
+																? handleAddDiffComments
+																: undefined
+														}
+														onSendToTerminal={
+															onSendReviewComments || showClineAgentChatPanel
+																? handleSendDiffComments
+																: undefined
+														}
+														comments={diffComments}
+														onCommentsChange={setDiffComments}
+													/>
+												</div>
+												<ResizeHandle
+													orientation="vertical"
+													ariaLabel="Resize detail diff panels"
+													onMouseDown={handleDetailDiffSeparatorMouseDown}
+													className="z-10"
+												/>
+												<div
+													className="flex min-h-0 min-w-0"
+													style={{ flex: `0 0 ${detailDiffFileTreePanelPercent}` }}
+												>
+													<FileTreePanel
+														workspaceFiles={isRuntimeAvailable ? runtimeFiles : null}
+														selectedPath={selectedPath}
+														onSelectPath={setSelectedPath}
+														panelFlex="1 1 0"
+													/>
+												</div>
+											</div>
+										)}
+									</div>
+								</div>
+							)}
 						</div>
 						{bottomTerminalOpen && bottomTerminalTaskId ? (
 							<BottomTerminalSection

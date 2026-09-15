@@ -221,6 +221,44 @@ describe("CardDetailView", () => {
 		}
 	});
 
+	async function openChangesPanel(): Promise<void> {
+		await act(async () => {
+			container.querySelector<HTMLButtonElement>('button[aria-label="Show changes panel"]')?.click();
+		});
+	}
+
+	it("starts closed on load and can reopen and close the changes panel", async () => {
+		await act(async () => {
+			root.render(
+				<CardDetailView
+					selection={createSelection()}
+					currentProjectId="workspace-1"
+					sessionSummary={null}
+					taskSessions={{}}
+					onSessionSummary={() => {}}
+					onCardSelect={() => {}}
+					onTaskDragEnd={() => {}}
+					onMoveToTrash={() => {}}
+					bottomTerminalOpen={false}
+					bottomTerminalTaskId={null}
+					bottomTerminalSummary={null}
+					onBottomTerminalClose={() => {}}
+				/>,
+			);
+		});
+		expect(container.querySelector('[data-testid="diff-viewer-panel"]')).toBeNull();
+		expect(container.querySelector('[aria-label="Resize agent and diff panels"]')).toBeNull();
+		await openChangesPanel();
+		expect(container.querySelector('[data-testid="diff-viewer-panel"]')).not.toBeNull();
+		await act(async () => {
+			container.querySelector<HTMLButtonElement>('[aria-label="Collapse changes panel"]')?.click();
+		});
+		expect(container.querySelector('[data-testid="diff-viewer-panel"]')).toBeNull();
+		expect(container.querySelector('[aria-label="Show changes panel"]')).not.toBeNull();
+		await openChangesPanel();
+		expect(container.querySelector('[data-testid="diff-viewer-panel"]')).not.toBeNull();
+	});
+
 	it("collapses the expanded diff on Escape without closing the detail view", async () => {
 		await act(async () => {
 			root.render(
@@ -240,6 +278,7 @@ describe("CardDetailView", () => {
 				/>,
 			);
 		});
+		await openChangesPanel();
 
 		const expandButton = container.querySelector('button[aria-label="Expand split diff view"]');
 		expect(expandButton).toBeInstanceOf(HTMLButtonElement);
@@ -285,6 +324,7 @@ describe("CardDetailView", () => {
 				/>,
 			);
 		});
+		await openChangesPanel();
 
 		const lastTurnButton = Array.from(container.querySelectorAll("button")).find(
 			(button) => button.textContent?.trim() === "Last Turn",
@@ -323,6 +363,7 @@ describe("CardDetailView", () => {
 				/>,
 			);
 		});
+		await openChangesPanel();
 
 		const getDiffModeButton = (label: string): HTMLButtonElement => {
 			const button = Array.from(container.querySelectorAll("button")).find(
@@ -380,6 +421,7 @@ describe("CardDetailView", () => {
 				/>,
 			);
 		});
+		await openChangesPanel();
 
 		const input = document.createElement("input");
 		container.appendChild(input);
@@ -412,6 +454,7 @@ describe("CardDetailView", () => {
 				/>,
 			);
 		});
+		await openChangesPanel();
 
 		expect(container.querySelector('[data-testid="cline-agent-chat-panel"]')).toBeInstanceOf(HTMLDivElement);
 		expect(container.querySelector('[data-testid="agent-terminal-panel"]')).toBeNull();
@@ -440,6 +483,7 @@ describe("CardDetailView", () => {
 				/>,
 			);
 		});
+		await openChangesPanel();
 
 		expect(container.querySelector('[data-testid="cline-agent-chat-panel"]')).toBeNull();
 	});
@@ -478,6 +522,7 @@ describe("CardDetailView", () => {
 				/>,
 			);
 		});
+		await openChangesPanel();
 
 		expect(container.querySelector('[data-testid="cline-agent-chat-panel"]')).toBeInstanceOf(HTMLDivElement);
 	});
@@ -516,6 +561,7 @@ describe("CardDetailView", () => {
 				/>,
 			);
 		});
+		await openChangesPanel();
 
 		expect(container.querySelector('[data-testid="cline-agent-chat-panel"]')).toBeNull();
 		expect(mockAgentTerminalPanel).toHaveBeenCalled();
@@ -541,6 +587,7 @@ describe("CardDetailView", () => {
 				/>,
 			);
 		});
+		await openChangesPanel();
 
 		const lastCall = mockAgentTerminalPanel.mock.calls.at(-1);
 		expect(lastCall?.[0]).toMatchObject({
@@ -572,6 +619,7 @@ describe("CardDetailView", () => {
 				/>,
 			);
 		});
+		await openChangesPanel();
 
 		const diffProps = getLastMockFirstArg<MockedDiffViewerProps>(mockDiffViewerPanel);
 		expect(diffProps.onAddToTerminal).toBeTypeOf("function");
@@ -607,6 +655,7 @@ describe("CardDetailView", () => {
 				/>,
 			);
 		});
+		await openChangesPanel();
 
 		const diffProps = getLastMockFirstArg<MockedDiffViewerProps>(mockDiffViewerPanel);
 		expect(diffProps.onSendToTerminal).toBeTypeOf("function");
@@ -641,6 +690,7 @@ describe("CardDetailView", () => {
 				/>,
 			);
 		});
+		await openChangesPanel();
 
 		expect(requireAgentPanel(container).style.width).toBe("62%");
 	});
@@ -664,6 +714,7 @@ describe("CardDetailView", () => {
 				/>,
 			);
 		});
+		await openChangesPanel();
 
 		const separator = requireResizeSeparator(container);
 		const dragHandle = separator.firstElementChild;
@@ -708,6 +759,7 @@ describe("CardDetailView", () => {
 					/>,
 				);
 			});
+			await openChangesPanel();
 		};
 
 		await renderDetail();
@@ -761,6 +813,7 @@ describe("CardDetailView", () => {
 				/>,
 			);
 		});
+		await openChangesPanel();
 
 		expect(requireDetailDiffFileTreePanel(container).style.flex).toBe("0 0 42%");
 
